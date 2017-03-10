@@ -489,6 +489,7 @@ trait BrokerCli {
       var stickiness = "stickiness:"
       stickiness += " period:" + broker.stickiness.period
       if (broker.stickiness.hostname != null) stickiness += ", hostname:" + broker.stickiness.hostname
+      if (broker.stickiness.port != null) stickiness += ", port:" + broker.stickiness.port
       if (broker.stickiness.stopTime != null) stickiness += ", expires:" + Repr.dateTime(broker.stickiness.expires)
       printLine(stickiness, indent)
 

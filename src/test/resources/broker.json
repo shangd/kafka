@@ -19,7 +19,8 @@
   "syslog": false,
   "stickiness": {
     "period": "10m",
-    "hostname": "host1"
+    "hostname": "host1",
+    "port": 1234
   },
   "log4jOptions": "k1=v1,k2=v2",
   "options": "a=1,b=2",

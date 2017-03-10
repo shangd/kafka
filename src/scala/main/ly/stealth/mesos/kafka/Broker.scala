@@ -169,20 +169,32 @@ class Broker(val id: Int = 0) {
     )
   }
 
-  private[kafka] def getSuitablePort(ports: util.List[Range]): Int = {
-    if (ports.isEmpty) return -1
+  private[kafka] def getSuitablePort(availablePorts: util.List[Range]): Int = {
+    // no available ports to choose from
+    if (availablePorts.isEmpty) return -1
 
-    val ports_ = ports.sortBy(r => r.start)
-    if (port == null)
-      return ports_.get(0).start
+    // compute allowed usable ports based on broker config and offer
+    val usablePorts: List[Range] =
+      if (port == null) availablePorts.toList.sortBy(_.start)
+      else availablePorts.toList.flatMap { range =>
+        if (range.overlap(port) == null) None else Some(range.overlap(port))
+      }.sortBy(_.start)
 
-    for (range <- ports_) {
-      val overlap = range.overlap(port)
-      if (overlap != null)
-        return overlap.start
+    // no port usable
+    if (usablePorts.isEmpty) return -1
+
+    // try to stick to the previous port if possible
+    if (stickiness.port != null) {
+      val preferedPort = new Range(stickiness.port)
+      for (range <- usablePorts) {
+        val found = range.overlap(preferedPort)
+        if (found != null)
+          return found.start
+      }
     }
 
-    -1
+    // else return first usable port
+    return usablePorts.get(0).start
   }
 
   /*
@@ -198,8 +210,8 @@ class Broker(val id: Int = 0) {
 
   def shouldStop: Boolean = !active && task != null && !task.stopping
 
-  def registerStart(hostname: String): Unit = {
-    stickiness.registerStart(hostname)
+  def registerStart(hostname: String, port: Integer): Unit = {
+    stickiness.registerStart(hostname, port)
     failover.resetFailures()
   }
 
@@ -289,12 +301,14 @@ object Broker {
   class Stickiness(_period: Period = new Period("10m")) {
     var period: Period = _period
     @volatile var hostname: String = null
+    @volatile var port: Integer = null
     @volatile var stopTime: Date = null
 
     def expires: Date = if (stopTime != null) new Date(stopTime.getTime + period.ms) else null
 
-    def registerStart(hostname: String): Unit = {
+    def registerStart(hostname: String, port: Integer): Unit = {
       this.hostname = hostname
+      this.port = port
       stopTime = null
     }
 

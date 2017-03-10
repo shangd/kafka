@@ -55,7 +55,7 @@ class JsonTest {
     b.task.endpoint = new Endpoint("host1:9092")
     b.syslog = false
     b.stickiness = new Stickiness(new Period("10m"))
-    b.stickiness.registerStart("host1")
+    b.stickiness.registerStart("host1", 1234)
     b.log4jOptions = Map("k1" -> "v1", "k2" -> "v2")
     b.options = Map("a" -> "1", "b" -> "2")
     b.active = true

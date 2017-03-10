@@ -175,11 +175,11 @@ class RangeDeserializer extends StdDeserializer[Range](classOf[Range]) {
   }
 }
 
-case class StickinessModel(period: Period, stopTime: Date, hostname: String)
+case class StickinessModel(period: Period, stopTime: Date, hostname: String, port: Integer)
 
 class StickinessSerializer extends StdSerializer[Stickiness](classOf[Stickiness]) {
   override def serialize(s: Stickiness, gen: JsonGenerator, provider: SerializerProvider): Unit = {
-    provider.defaultSerializeValue(StickinessModel(s.period, s.stopTime, s.hostname), gen)
+    provider.defaultSerializeValue(StickinessModel(s.period, s.stopTime, s.hostname, s.port), gen)
   }
 }
 
@@ -188,6 +188,7 @@ class StickinessDeserializer extends StdDeserializer[Stickiness](classOf[Stickin
     val model = p.readValueAs(classOf[StickinessModel])
     val s = new Stickiness()
     s.hostname = model.hostname
+    s.port = model.port
     s.stopTime = model.stopTime
     s.period = model.period
     s
